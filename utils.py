@@ -32,7 +32,7 @@ def load_llm():
     """
     Load the Ollama model
     """
-    return ChatOllama(model="phi3")
+    return ChatOllama(model="initium/law_model")
 
 def retrieval_qa_chain(llm, prompt, db):
     """
