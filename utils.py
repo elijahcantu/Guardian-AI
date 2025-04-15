@@ -8,15 +8,25 @@ from langchain_core.prompts import ChatPromptTemplate
 FAISS_INDEX = "vectorstore/"
 
 
-custom_prompt_template = """[INST] <<SYS>>
-You are a trained bot to guide people on legal statutes and information on michigan foster care. You will answer user's query with your knowledge and the context provided.
-
-<</SYS>>
-Use the following pieces of context to answer the users question.
-Context : {context}
-Question : {question}
-Answer : [/INST]
+custom_prompt_template = """[INST] 
+{{ .System }}
+{{ .Prompt }}
+[/INST]
 """
+
+def set_custom_prompt_template():
+    """
+    Set the custom prompt template for the LLMChain
+    """
+    # Modify this to follow the expected format
+    system_message = """You are a trained bot to guide people on legal statutes and information on Michigan foster care. You will answer the user's query with your knowledge and the context provided."""
+    prompt = f"Context: {{}}, Question: {{question}}"
+    
+    # Now combine the system message and the prompt in the correct format
+    full_prompt = f"[INST] {{ .System }} {system_message} {{ .Prompt }} {prompt} [/INST]"
+    
+    return full_prompt
+
 
 if 'chat_log' not in st.session_state:
     st.session_state.chat_log = []
