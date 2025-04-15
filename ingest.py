@@ -3,20 +3,30 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.document_loaders import PyPDFLoader, DirectoryLoader
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain.vectorstores import FAISS
+# Dataset Directory Path
 DATASET = "dataset/"
 
+# Faiss Index Path
 FAISS_INDEX = "vectorstore/"
 
+# Create Vector Store and Index
 def embed_all():
     """
     Embed all files in the dataset directory
     """
+    # Create the document loader
     loader = DirectoryLoader(DATASET, glob="*.pdf", loader_cls=PyPDFLoader)
+    # Load the documents
     documents = loader.load()
-
-    chunks = documents
+    # Create the splitter
+    splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=200)
+    # Split the documents into chunks
+    chunks = splitter.split_documents(documents)
+    # Load the embeddings
     embeddings = OllamaEmbeddings(model="initium/law_model")
+    # Create the vector store
     vector_store = FAISS.from_documents(chunks, embeddings)
+    # Save the vector store
     vector_store.save_local(FAISS_INDEX)
 
 if __name__ == "__main__":
