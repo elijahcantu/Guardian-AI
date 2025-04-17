@@ -13,11 +13,17 @@ def set_custom_prompt_template():
         """You are a legal assistant specializing in Michigan foster care and statutory law.
             Provide clear, fact-based answers strictly using the provided documents.
             Always cite relevant statutes when applicable.
-            If the context is insufficient, state that further research is needed.
-            Do not make assumptions or provide legal advice."""
+            If the context is insufficient, , state explicitly that the information is not available in the provided documents.
+            Do not make assumptions or provide legal advice under any circumstances."""
     )
     human = HumanMessagePromptTemplate.from_template(
-        "Context:\n{context}\n\nQuestion: {question}\n\nAnswer (quote the statute directly, including section number):"
+    "Context:\n{context}\n\n"
+    "Question: {question}\n\n"
+    "Answer strictly using only the context above.  \n"
+    "- If you quote a statutory definition, include the exact section number.  \n"
+    "- If the user is asking for a summary, summarize *only* what appears in the retrieved text.  \n"
+    "- If the question requests legal advice, respond: “I’m sorry, but I can’t provide legal advice.”  \n"
+    "- If the information is not present in the context, reply: “Information not found in the provided documents.”"
     )
     return ChatPromptTemplate.from_messages([system, human])
 
@@ -28,20 +34,27 @@ if 'chat_log' not in st.session_state:
 
 def set_prompt(simple: bool):
     sys = (
-        "You are a legal assistant specializing in Michigan foster care and statutory law."
-        "Provide clear, fact-based answers strictly using the provided documents."
-        "Always cite relevant statutes when applicable."
-        "If the context is insufficient, state that further research is needed."
-        "Do not make assumptions or provide legal advice."
-        + ("  Always explain in plain, simple English." if simple else "")
+        "You are a legal assistant specializing in Michigan foster care and statutory law. "
+        "Provide clear, fact-based answers strictly using the provided documents. "
+        "Always cite relevant statutes when applicable. "
+        "If the context is insufficient, state explicitly that the information is not available in the provided documents. "
+        "Do not make assumptions or provide legal advice under any circumstances. "
+        + ("Always explain in plain, simple English." if simple else "")
     )
     human = HumanMessagePromptTemplate.from_template(
-        "Context:\n{context}\n\nQuestion: {question}\n\nAnswer:"
+    "Context:\n{context}\n\n"
+    "Question: {question}\n\n"
+    "Answer strictly using only the context above.  \n"
+    "- If you quote a statutory definition, include the exact section number.  \n"
+    "- If the user is asking for a summary, summarize *only* what appears in the retrieved text.  \n"
+    "- If the question requests legal advice, respond: “I’m sorry, but I can’t provide legal advice.”  \n"
+    "- If the information is not present in the context, reply: “Information not found in the provided documents.”"
     )
     return ChatPromptTemplate.from_messages([
         SystemMessagePromptTemplate.from_template(sys),
         human
     ])
+
 
 
 def load_llm():

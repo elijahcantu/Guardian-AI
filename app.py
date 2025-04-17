@@ -8,15 +8,12 @@ from langchain.chains import RetrievalQA
 
 
 def get_chain(simple: bool):
-    # 1) load your embeddings & FAISS index
     embeddings = OllamaEmbeddings(model="initium/law_model")
     db = FAISS.load_local(FAISS_INDEX, embeddings, allow_dangerous_deserialization=True)
 
-    # 2) load the LLM and build the right prompt
     llm = load_llm()
     qa_prompt = set_prompt(simple)
 
-    # 3) assemble the RetrievalQA chain
     return RetrievalQA.from_chain_type(
         llm=llm,
         chain_type="stuff",
@@ -30,9 +27,10 @@ def main():
     st.set_page_config(page_title="Guardian AI")
     st.title("Guardian AI")
 
-    # —— NEW: PDF uploader ——
+    st.warning("⚠️ **This tool is for informational purposes only and cannot be used as legal advice.**")
+
     uploaded = st.file_uploader(
-        "📂 Upload one or more PDFs to add to the dataset",
+        "Upload one or more PDFs to add to the dataset",
         type="pdf",
         accept_multiple_files=True
     )
@@ -42,16 +40,13 @@ def main():
             dest = os.path.join("dataset", pdf.name)
             with open(dest, "wb") as f:
                 f.write(pdf.read())
-        st.success(f"Saved {len(uploaded)} file(s) to dataset/, rebuilding index…")
-        embed_all()
+        st.success(f"Saved {len(uploaded)} file(s) to dataset/, processing...")
+        embed_new_files()
 
-    # —— style toggle ——
     simple = st.checkbox("📖 Plain English")
 
-    # —— build chain after knowing simple ——
     chain = get_chain(simple)
 
-    # hints for fill-in-the-blank usage
     st.markdown(
         "**💡 Try questions like:**  \n"
         "- _What does “____” mean?_  \n"
@@ -63,12 +58,19 @@ def main():
         "You:",
         placeholder="e.g. What does “adoptee” mean?"
     )
+
     if user_input:
-        # append simple-language instruction if requested
         query = user_input + ("  Please answer in plain, simple language." if simple else "")
         st.markdown(f"**You:** {user_input}{' (simple)' if simple else ''}")
+
         bot_output = chain(query)["result"]
-        st.markdown(f"**Guardian AI:** {bot_output}")
+
+        if "legal advice" in user_input.lower():
+            st.error("Guardian AI cannot provide legal advice. Please consult a qualified legal professional.")
+        elif "information is not available" in bot_output.lower() or "further research" in bot_output.lower():
+            st.info("The requested information is not available in the provided documents.")
+        else:
+            st.markdown(f"**Guardian AI:** {bot_output}")
 
 
 if __name__ == "__main__":
