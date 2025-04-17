@@ -22,25 +22,11 @@ def set_custom_prompt_template():
     )
     return ChatPromptTemplate.from_messages([system, human])
 
-custom_prompt_template = """[INST] <<SYS>>
-You are a trained bot to guide people on legal statutes and information on michigan foster care. You will answer user's query with your knowledge and the context provided.
 
-<</SYS>>
-Use the following pieces of context to answer the users question.
-Context : {context}
-Question : {question}
-Answer : [/INST]
-"""
 
 if 'chat_log' not in st.session_state:
     st.session_state.chat_log = []
 
-def set_custom_prompt_template():
-    """
-    Set the custom prompt template for the LLMChain
-    """
-    prompt = ChatPromptTemplate.from_template(custom_prompt_template)
-    return prompt
 
 def load_llm():
     """
