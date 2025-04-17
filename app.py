@@ -1,8 +1,11 @@
+import os
 import streamlit as st
-from utils import load_llm, set_prompt, FAISS_INDEX  # ← bring in what you need
+from utils import load_llm, set_prompt, FAISS_INDEX
+from ingest import embed_all
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain.vectorstores import FAISS
 from langchain.chains import RetrievalQA
+
 
 def get_chain(simple: bool):
     # 1) load your embeddings & FAISS index
@@ -11,7 +14,7 @@ def get_chain(simple: bool):
 
     # 2) load the LLM and build the right prompt
     llm = load_llm()
-    qa_prompt = set_prompt(simple)           # ← here’s where `simple` comes in
+    qa_prompt = set_prompt(simple)
 
     # 3) assemble the RetrievalQA chain
     return RetrievalQA.from_chain_type(
@@ -22,23 +25,38 @@ def get_chain(simple: bool):
         chain_type_kwargs={"prompt": qa_prompt},
     )
 
+
 def main():
     st.set_page_config(page_title="Guardian AI")
     st.title("Guardian AI")
 
-    # —— style toggle goes here ——
+    # —— NEW: PDF uploader ——
+    uploaded = st.file_uploader(
+        "📂 Upload one or more PDFs to add to the dataset",
+        type="pdf",
+        accept_multiple_files=True
+    )
+    if uploaded:
+        os.makedirs("dataset", exist_ok=True)
+        for pdf in uploaded:
+            dest = os.path.join("dataset", pdf.name)
+            with open(dest, "wb") as f:
+                f.write(pdf.read())
+        st.success(f"Saved {len(uploaded)} file(s) to dataset/, rebuilding index…")
+        embed_all()
+
+    # —— style toggle ——
     simple = st.checkbox("📖 Plain English")
 
-    # —— and *only now* do we build the chain with that flag ——
+    # —— build chain after knowing simple ——
     chain = get_chain(simple)
 
-    # your fill‑in‑the‑blank hints
+    # hints for fill-in-the-blank usage
     st.markdown(
         "**💡 Try questions like:**  \n"
-        ""
-        "- _What does “__________” mean?_  \n"
-        "- _Which section defines “__________”?_  \n"
-        "- _Summarize “__________”._"
+        "- _What does “____” mean?_  \n"
+        "- _Which section defines “____”?_  \n"
+        "- _Summarize “____”._"
     )
 
     user_input = st.text_input(
@@ -46,11 +64,12 @@ def main():
         placeholder="e.g. What does “adoptee” mean?"
     )
     if user_input:
-        # if they want simpler language, tack on that instruction
+        # append simple-language instruction if requested
         query = user_input + ("  Please answer in plain, simple language." if simple else "")
-        st.markdown(f"**You:** {user_input}  {'(simple)' if simple else ''}")
+        st.markdown(f"**You:** {user_input}{' (simple)' if simple else ''}")
         bot_output = chain(query)["result"]
         st.markdown(f"**Guardian AI:** {bot_output}")
+
 
 if __name__ == "__main__":
     main()
