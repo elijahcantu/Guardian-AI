@@ -4,7 +4,6 @@ from langchain_community.vectorstores import FAISS
 from langchain.chains import RetrievalQA
 from langchain_core.prompts import ChatPromptTemplate
 
-
 FAISS_INDEX = "vectorstore/"
 
 from langchain_core.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
@@ -26,6 +25,23 @@ def set_custom_prompt_template():
 
 if 'chat_log' not in st.session_state:
     st.session_state.chat_log = []
+
+def set_prompt(simple: bool):
+    sys = (
+        "You are a legal assistant specializing in Michigan foster care and statutory law."
+        "Provide clear, fact-based answers strictly using the provided documents."
+        "Always cite relevant statutes when applicable."
+        "If the context is insufficient, state that further research is needed."
+        "Do not make assumptions or provide legal advice."
+        + ("  Always explain in plain, simple English." if simple else "")
+    )
+    human = HumanMessagePromptTemplate.from_template(
+        "Context:\n{context}\n\nQuestion: {question}\n\nAnswer:"
+    )
+    return ChatPromptTemplate.from_messages([
+        SystemMessagePromptTemplate.from_template(sys),
+        human
+    ])
 
 
 def load_llm():
