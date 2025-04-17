@@ -7,6 +7,20 @@ from langchain_core.prompts import ChatPromptTemplate
 
 FAISS_INDEX = "vectorstore/"
 
+from langchain_core.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
+
+def set_custom_prompt_template():
+    system = SystemMessagePromptTemplate.from_template(
+        """You are a legal assistant specializing in Michigan foster care and statutory law.
+            Provide clear, fact-based answers strictly using the provided documents.
+            Always cite relevant statutes when applicable.
+            If the context is insufficient, state that further research is needed.
+            Do not make assumptions or provide legal advice."""
+    )
+    human = HumanMessagePromptTemplate.from_template(
+        "Context:\n{context}\n\nQuestion: {question}\n\nAnswer (quote the statute directly, including section number):"
+    )
+    return ChatPromptTemplate.from_messages([system, human])
 
 custom_prompt_template = """[INST] <<SYS>>
 You are a trained bot to guide people on legal statutes and information on michigan foster care. You will answer user's query with your knowledge and the context provided.
@@ -41,7 +55,7 @@ def retrieval_qa_chain(llm, prompt, db):
     qa_chain = RetrievalQA.from_chain_type(
         llm=llm,
         chain_type='stuff',
-        retriever=db.as_retriever(search_kwargs={'k': 2}),
+        retriever=db.as_retriever(search_kwargs={'k': 5}),
         return_source_documents=True,
         chain_type_kwargs={'prompt': prompt}
     )

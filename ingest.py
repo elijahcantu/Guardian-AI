@@ -19,7 +19,7 @@ def embed_all():
     # Load the documents
     documents = loader.load()
     # Create the splitter
-    splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=200)
+    splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
     # Split the documents into chunks
     chunks = splitter.split_documents(documents)
     # Load the embeddings
