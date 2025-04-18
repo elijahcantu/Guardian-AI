@@ -27,7 +27,7 @@ def main():
     st.set_page_config(page_title="Guardian AI")
     st.title("Guardian AI")
 
-    st.warning("⚠️ **This tool is for informational purposes only and cannot be used as legal advice.**")
+    st.warning("⚠️ **This tool is for informational purposes only, for completely accurate advice, consult a lawyer.**")
 
     uploaded = st.file_uploader(
         "Upload one or more PDFs to add to the dataset",
@@ -40,8 +40,9 @@ def main():
             dest = os.path.join("dataset", pdf.name)
             with open(dest, "wb") as f:
                 f.write(pdf.read())
-        st.success(f"Saved {len(uploaded)} file(s) to dataset/, processing...")
-        embed_new_files()
+        st.success(f"Saved {len(uploaded)} file(s), processing and updating index...")
+        from ingest import embed_uploaded_files
+        embed_uploaded_files(uploaded)
 
     simple = st.checkbox("📖 Plain English")
 
